@@ -71,7 +71,7 @@ if __name__ == "__main__":
     '''
 
     N = 10  # number of users ,WDs的数量
-    n = 30000  # number of time frames ,一共模拟30000个时间片，以得到最终的数据
+    n = 300  # number of time frames ,一共模拟30000个时间片，以得到最终的数据    时间帧数，如果实际的任务数小于帧数，就循环的使用任务
     K = N  # initialize K = N ,初始化的K大小
     decoder_mode = 'OP'  # the quantization mode could be 'OP' (Order-preserving) or 'KNN'
     Memory = 1024  # capacity of memory structure 经验池的容量大小是1024条经验
@@ -111,9 +111,15 @@ if __name__ == "__main__":
     mode_his = []
     k_idx_his = []
     K_his = []
-    for i in range(n):
+    for i in range(n):  # 一共有30000个时间帧
+        #############################################
+        # 只是输出一下程序的执行进度
+        # 用百分比表示
         if i % (n // 10) == 0:
             print("%0.1f" % (i / n))
+        #############################################
+
+        # 更新K 更新的算法见论文
         if i > 0 and i % Delta == 0:
             # index counts from 0
             if Delta > 1:
@@ -123,15 +129,17 @@ if __name__ == "__main__":
             K = min(max_k + 1, N)
 
         if i < n - num_test:
-            # training
+            # training  从训练集中取出数据
             i_idx = i % split_idx
         else:
-            # test
+            # test      从测试集中取出数据
             i_idx = i - n + num_test + split_idx
 
         h = channel[i_idx, :]
 
         # the action selection must be either 'OP' or 'KNN'
+        # 输入 (信道增益 K OP)
+        # 输出 K个长度为N的数组，并且数组的元素是0或者1
         m_list = mem.decode(h, K, decoder_mode)
 
         r_list = []
@@ -139,6 +147,7 @@ if __name__ == "__main__":
             r_list.append(bisection(h / 1000000, m)[0])
 
         # encode the mode with largest reward
+        # 选出其中具有最大加权计算速率的动作
         mem.encode(h, m_list[np.argmax(r_list)])
         # the main code for DROO training ends here
 
@@ -153,8 +162,9 @@ if __name__ == "__main__":
         mode_his.append(m_list[np.argmax(r_list)])
 
     total_time = time.time() - start_time
-    mem.plot_cost()
-    plot_rate(rate_his_ratio)
+    # 绘图
+    # mem.plot_cost()
+    # plot_rate(rate_his_ratio)
 
     print("Averaged normalized computation rate:", sum(rate_his_ratio[-num_test: -1]) / num_test)
     print('Total time consumed:%s' % total_time)

@@ -115,19 +115,22 @@ class MemoryDNN:
 
     def decode(self, h, k=1, mode='OP'):
         # to have batch dimension when feed into tf placeholder
-        # 使用DNN预测
+        # 使用DNN预测  输入是信道增益 输出是[0,1]之间的float
         h = h[np.newaxis, :]
 
         m_pred = self.model.predict(h)
 
-        if mode is 'OP':
+        if mode == 'OP':
+            # 根据OP算法 最终输出的是K个长度为N的数组，并且数组的元素是0或者1
             return self.knm(m_pred[0], k)
-        elif mode is 'KNN':
+        elif mode == 'KNN':
             return self.knn(m_pred[0], k)
         else:
             print("The action selection must be 'OP' or 'KNN'")
 
     def knm(self, m, k=1):
+        # 动态调整产生的的量化动作的数量
+        # 产生K个量化的动作
         # return k order-preserving binary actions
         m_list = []
         # generate the ﬁrst binary ofﬂoading decision with respect to equation (8)
@@ -149,7 +152,8 @@ class MemoryDNN:
 
     def knn(self, m, k=1):
         # list all 2^N binary offloading actions
-        if len(self.enumerate_actions) is 0:
+        # 列出所有2^N中动作
+        if len(self.enumerate_actions) == 0:
             import itertools
             self.enumerate_actions = np.array(list(map(list, itertools.product([0, 1], repeat=self.net[0]))))
 

@@ -31,14 +31,16 @@ def plot_gain(gain_his):
     plt.show()
 
 
+# 二分
 def bisection(h, M, weights=[]):
     # the bisection algorithm proposed by Suzhi BI
     # average time to find the optimal: 0.012535839796066284 s
 
     # parameters and equations
-    o = 100
-    p = 3
-    u = 0.7
+    # Local Computing Mode and Edge Compute Mode
+    o = 100  # 表示参数fi
+    p = 3  # 功率
+    u = 0.7  # 参数u
     eta1 = ((u * p) ** (1.0 / 3)) / o
     ki = 10 ** -26
     eta2 = u * p / 10 ** -10
@@ -47,20 +49,22 @@ def bisection(h, M, weights=[]):
     epsilon = B / (Vu * np.log(2))
     x = []  # a =x[0], and tau_j = a[1:]
 
-    M0 = np.where(M == 0)[0]
-    M1 = np.where(M == 1)[0]
+    M0 = np.where(M == 0)[0]  # 返回M中等于0的元素的下标 用数组的形式返回
+    M1 = np.where(M == 1)[0]  # 返回M中等于1的元素的下标 用数组的形式返回
 
-    hi = np.array([h[i] for i in M0])
-    hj = np.array([h[i] for i in M1])
+    hi = np.array([h[i] for i in M0])  # 本地执行用 hi表示
+    hj = np.array([h[i] for i in M1])  # 边缘执行用 hj表示
 
-    if len(weights) == 0:
+    if len(weights) == 0:  # 没有给出权重就用默认的权重
         # default weights [1, 1.5, 1, 1.5, 1, 1.5, ...]
         weights = [1.5 if i % 2 == 1 else 1 for i in range(len(M))]
 
+    # 为每个任务分配权重
     wi = np.array([weights[M0[i]] for i in range(len(M0))])
     wj = np.array([weights[M1[i]] for i in range(len(M1))])
 
     def sum_rate(x):
+        #  the local computation rate (in bits per second) 每秒处理数据的比特数
         sum1 = sum(wi * eta1 * (hi / ki) ** (1.0 / 3) * x[0] ** (1.0 / 3))
         sum2 = 0
         for i in range(len(M1)):
