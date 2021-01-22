@@ -135,16 +135,19 @@ if __name__ == "__main__":
             # test      从测试集中取出数据
             i_idx = i - n + num_test + split_idx
 
-        h = channel[i_idx, :]
+        h = channel[i_idx, :]  # 取出信道增益
 
         # the action selection must be either 'OP' or 'KNN'
         # 输入 (信道增益 K OP)
         # 输出 K个长度为N的数组，并且数组的元素是0或者1
         m_list = mem.decode(h, K, decoder_mode)
 
+        ##################################################
+        # 主要是这一块的内容没有弄得很清楚
         r_list = []
         for m in m_list:
             r_list.append(bisection(h / 1000000, m)[0])
+        ##################################################
 
         # encode the mode with largest reward
         # 选出其中具有最大加权计算速率的动作

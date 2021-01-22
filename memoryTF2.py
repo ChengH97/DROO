@@ -61,11 +61,10 @@ class MemoryDNN:
         使用keras构建网络，keras的backen是tensorflow
         '''
         self.model = keras.Sequential([
-            layers.Dense(self.net[1], activation='relu'),  # the first hidden layer
+            layers.Dense(self.net[1], activation='relu', input_dim=self.net[0]),  # the first hidden layer
             layers.Dense(self.net[2], activation='relu'),  # the second hidden layer
             layers.Dense(self.net[-1], activation='sigmoid')  # the output layer
         ])
-
         self.model.compile(optimizer=keras.optimizers.Adam(lr=self.lr), loss=tf.losses.binary_crossentropy,
                            metrics=['accuracy'])
 
@@ -114,12 +113,18 @@ class MemoryDNN:
         self.cost_his.append(self.cost)
 
     def decode(self, h, k=1, mode='OP'):
+
         # to have batch dimension when feed into tf placeholder
         # 使用DNN预测  输入是信道增益 输出是[0,1]之间的float
+
+        # 输入数据的形状是 (N,)
+        # 神经网络接受的数据的形状是 (None,N)
         h = h[np.newaxis, :]
 
+        # 使用神经网络进行预测，输出的是relaxed action
         m_pred = self.model.predict(h)
 
+        # 使用相应的算法对神经网络预测出来的结果进行 量化 量化到0 or 1
         if mode == 'OP':
             # 根据OP算法 最终输出的是K个长度为N的数组，并且数组的元素是0或者1
             return self.knm(m_pred[0], k)
